@@ -41,8 +41,8 @@ function [ind, max_vol, it] = maxvol_ratio(A1, A2, n, r, do_update, debug)
 			R1 = chol(A1(ind, ind)); R2 = chol(A2(ind, ind)); 
 		end
 		if mod(it, do_update) == mod(1, do_update)
-			B1 = (A1(:, ind) / R1) / R1';
-			B2 = (A2(:, ind) / R2) / R2';
+			B1 = (A1(1:n, ind) / R1) / R1';
+			B2 = (A2(1:n, ind) / R2) / R2';
 			iA1 = diag(R1 \ (R1' \ eye(r)));
 			iA2 = diag(R2 \ (R2' \ eye(r)));
 		end
@@ -100,11 +100,11 @@ function [ind, max_vol, it] = maxvol_ratio(A1, A2, n, r, do_update, debug)
 	
 			if mod(it, do_update) ~= 0
 				% update of B
-				v1 = A1(:, cind(i0)) - A1(:, ind(j0));
-				DB1 = v1 * ((ej' / R1) / R1') - (A1(:, ind) * vB1u') * vB1v;
+				v1 = A1(1:n, cind(i0)) - A1(1:n, ind(j0));
+				DB1 = v1 * ((ej' / R1) / R1') - (A1(1:n, ind) * vB1u') * vB1v;
 				B1 = B1 + DB1;
-				v2 = A2(:, cind(i0)) - A2(:, ind(j0));
-				DB2 = v2 * ((ej' / R2) / R2') - (A2(:, ind) * vB2u') * vB2v;
+				v2 = A2(1:n, cind(i0)) - A2(1:n, ind(j0));
+				DB2 = v2 * ((ej' / R2) / R2') - (A2(1:n, ind) * vB2u') * vB2v;
 				B2 = B2 + DB2;
 			end
 	
@@ -130,7 +130,10 @@ end
 %---------------------------------------------------------------------------------
 function R = updateR(R, U, W)
 % Compute the Cholesky factorization of R' * R + U * W * U' updating R
-	[Z, D] = eig(W);
+	[Z, D] = eig(full(W));
+	if issparse(R)
+		R = full(R);
+	end
 	U = U * Z;
 	if D(1, 1) > 0
 			R = cholupdate(R, U(:, 1) * sqrt(D(1, 1)));

@@ -41,7 +41,7 @@ function [ind, max_vol, it] = maxvol_spsd(A, n, r, do_update, debug)
 			R = chol(A(ind, ind)); 
 		end
 		if mod(it, do_update) == mod(1, do_update)
-			B = (A(:, ind) / R) / R';
+			B = (A(1:n, ind) / R) / R';
 			iA = diag(R \ (R' \ eye(r)));
 		end
 
@@ -85,7 +85,7 @@ function [ind, max_vol, it] = maxvol_spsd(A, n, r, do_update, debug)
 	
 			if mod(it, do_update) ~= 0
 				% update of B
-				v = A(:, cind(i0)) - A(:, ind(j0));
+				v = A(:, cind(i0)) - A(1:n, ind(j0));
 				DB = v * ((ej' / R) / R') - (A(:, ind) * vBu') * vBv;
 				B = B + DB;
 			end
@@ -112,7 +112,10 @@ end
 %---------------------------------------------------------------------------------
 function R = updateR(R, U, W)
 % Compute the Cholesky factorization of R' * R + U * W * U' updating R
-	[Z, D] = eig(W);
+	if issparse(R)
+		R = full(R);
+	end
+	[Z, D] = eig(full(W));
 	U = U * Z;
 	if D(1, 1) > 0
 			R = cholupdate(R, U(:, 1) * sqrt(D(1, 1)));
